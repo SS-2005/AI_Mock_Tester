@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster - AI-Powered Assessment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border: #475569;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, #1a1f35 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border-radius: 25px;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .step.completed {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .upload-zone {
+            border: 3px dashed var(--border);
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-tertiary);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-tertiary);
+            color: var(--text);
+            font-size: 1em;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .question-card {
+            background: var(--bg-tertiary);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 2px solid var(--border);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-number {
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .timer {
+            background: var(--bg-secondary);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: var(--warning);
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-size: 1em;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, #8b5cf6 100%);
+            transition: width 0.3s ease;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .alert-info {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-card {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--border);
+        }
+
+        .result-card.correct {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .result-card.incorrect {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .score-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-item {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid var(--border);
+        }
+
+        .score-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .score-label {
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .file-info {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .score-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .question-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 QuizMaster</h1>
+            <p class="subtitle">AI-Powered Document Assessment & Question Generation</p>
+        </header>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span>Upload</span>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span>Configure</span>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <span>Answer</span>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <span>Results</span>
+            </div>
+        </div>
+
+        <!-- Section 1: Upload Document -->
+        <div class="section active" id="section-upload">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">📄 Upload Your Document</h2>
+                
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drag & Drop or Click to Upload</h3>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">
+                        Supported formats: PDF, TXT, DOCX (Max 10MB)
+                    </p>
+                    <input type="file" id="fileInput" accept=".pdf,.txt,.docx">
+                </div>
+
+                <div id="uploadStatus" style="margin-top: 20px;"></div>
+                <div id="fileInfoDisplay"></div>
+
+                <button class="btn btn-primary" id="proceedToConfig" style="margin-top: 20px; display: none;">
+                    Proceed to Configuration →
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 2: Configure Quiz -->
+        <div class="section" id="section-config">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">⚙️ Configure Your Quiz</h2>
+                
+                <div class="form-group">
+                    <label for="numQuestions">Number of Questions</label>
+                    <input type="number" id="numQuestions" min="1" max="20" value="5">
+                </div>
+
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy - Basic recall and understanding</option>
+                        <option value="medium" selected>Medium - Application and analysis</option>
+                        <option value="hard">Hard - Synthesis and evaluation</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button class="btn btn-primary" id="generateQuestions">Generate Questions</button>
+                    <button class="btn" id="backToUpload" style="background: var(--bg-tertiary);">← Back</button>
+                </div>
+
+                <div id="configStatus" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Section 3: Answer Questions -->
+        <div class="section" id="section-quiz">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">✍️ Answer the Questions</h2>
+                
+                <div class="progress-bar">
+                    <div class="progress-fill" id="quizProgress"></div>
+                </div>
+
+                <div id="questionsContainer"></div>
+
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button class="btn btn-success" id="submitQuiz">Submit All Answers</button>
+                    <button class="btn" id="backToConfig" style="background: var(--bg-tertiary);">← Back</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Results -->
+        <div class="section" id="section-results">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">📊 Your Results</h2>
+                
+                <div class="score-summary" id="scoreSummary"></div>
+                
+                <div id="detailedResults">${detailedHTML}</div>
+                <button class="btn btn-primary" id="startOver" style="margin-top: 30px;">Start New Quiz</button>
+            `;"></div>
+
+                <button class="btn btn-primary" id="startOver" style="margin-top: 30px;">Start New Quiz</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        const state = {
+            documentContent: '',
+            fileName: '',
+            questions: [],
+            answers: [],
+            timers: {},
+            currentStep: 1
+        };
+
+        const API_URL = 'http://localhost:5000';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeUpload();
+            initializeEventListeners();
+        });
+
+        function initializeUpload() {
+            const uploadZone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileUpload(file);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) handleFileUpload(file);
+            });
+        }
+
+        async function handleFileUpload(file) {
+            const statusDiv = document.getElementById('uploadStatus');
+            const fileInfoDiv = document.getElementById('fileInfoDisplay');
+            
+            statusDiv.innerHTML = '<div class="spinner"></div><p style="text-align:center;">Processing your document...</p>';
+            fileInfoDiv.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                state.documentContent = data.content;
+                state.fileName = data.filename;
+
+                statusDiv.innerHTML = '<div class="alert alert-success">✓ Document processed successfully!</div>';
+                
+                fileInfoDiv.innerHTML = `
+                    <div class="file-info">
+                        <div>
+                            <strong>📄 ${data.filename}</strong><br>
+                            <small style="color: var(--text-secondary);">
+                                ${data.word_count} words | ${(data.content_length / 1024).toFixed(2)} KB
+                            </small>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('proceedToConfig').style.display = 'block';
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="alert alert-error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        function initializeEventListeners() {
+            document.getElementById('proceedToConfig').addEventListener('click', () => goToStep(2));
+            document.getElementById('backToUpload').addEventListener('click', () => goToStep(1));
+            document.getElementById('backToConfig').addEventListener('click', () => goToStep(2));
+            document.getElementById('generateQuestions').addEventListener('click', generateQuestions);
+            document.getElementById('submitQuiz').addEventListener('click', submitQuiz);
+            document.getElementById('startOver').addEventListener('click', () => location.reload());
+        }
+
+        function goToStep(step) {
+            // Update step indicators
+            for (let i = 1; i <= 4; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                stepEl.classList.remove('active', 'completed');
+                if (i < step) stepEl.classList.add('completed');
+                if (i === step) stepEl.classList.add('active');
+            }
+
+            // Show appropriate section
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            const sections = ['upload', 'config', 'quiz', 'results'];
+            document.getElementById(`section-${sections[step - 1]}`).classList.add('active');
+
+            state.currentStep = step;
+        }
+
+        async function generateQuestions() {
+            const numQuestions = parseInt(document.getElementById('numQuestions').value);
+            const difficulty = document.getElementById('difficulty').value;
+            const statusDiv = document.getElementById('configStatus');
+
+            if (numQuestions < 1 || numQuestions > 20) {
+                statusDiv.innerHTML = '<div class="alert alert-error">Please enter between 1 and 20 questions.</div>';
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="spinner"></div><p style="text-align:center;">Generating questions using AI...</p>';
+
+            try {
+                const response = await fetch(`${API_URL}/generate-questions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: state.documentContent,
+                        num_questions: numQuestions,
+                        difficulty: difficulty
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                state.questions = data.questions;
+                renderQuestions();
+                goToStep(3);
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="alert alert-error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            state.questions.forEach((q, index) => {
+                const questionCard = document.createElement('div');
+                questionCard.className = 'question-card';
+                questionCard.innerHTML = `
+                    <div class="question-header">
+                        <span class="question-number">Question ${index + 1}</span>
+                        <span class="timer" id="timer-${index}">00:00</span>
+                    </div>
+                    <div class="question-text">${q.question}</div>
+                    <textarea id="answer-${index}" placeholder="Type your answer here..." 
+                              data-question-index="${index}"></textarea>
+                `;
+                container.appendChild(questionCard);
+
+                // Initialize timer for this question
+                const textarea = document.getElementById(`answer-${index}`);
+                textarea.addEventListener('focus', () => startTimer(index));
+                textarea.addEventListener('blur', () => pauseTimer(index));
+            });
+
+            updateProgress();
+        }
+
+        function startTimer(index) {
+            if (!state.timers[index]) {
+                state.timers[index] = { seconds: 0, interval: null };
+            }
+
+            if (state.timers[index].interval) return;
+
+            state.timers[index].interval = setInterval(() => {
+                state.timers[index].seconds++;
+                updateTimerDisplay(index);
+            }, 1000);
+        }
+
+        function pauseTimer(index) {
+            if (state.timers[index] && state.timers[index].interval) {
+                clearInterval(state.timers[index].interval);
+                state.timers[index].interval = null;
+            }
+        }
+
+        function updateTimerDisplay(index) {
+            const timerEl = document.getElementById(`timer-${index}`);
+            const seconds = state.timers[index].seconds;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerEl.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function updateProgress() {
+            const answered = state.questions.filter((_, i) => {
+                const textarea = document.getElementById(`answer-${i}`);
+                return textarea && textarea.value.trim().length > 0;
+            }).length;
+
+            const progress = (answered / state.questions.length) * 100;
+            document.getElementById('quizProgress').style.width = `${progress}%`;
+        }
+
+        // Update progress on input
+        document.addEventListener('input', (e) => {
+            if (e.target.tagName === 'TEXTAREA') {
+                updateProgress();
+            }
+        });
+
+        async function submitQuiz() {
+            // Stop all timers
+            Object.keys(state.timers).forEach(index => pauseTimer(parseInt(index)));
+
+            // Collect submissions
+            const submissions = state.questions.map((q, index) => {
+                const answer = document.getElementById(`answer-${index}`).value;
+                const timeTaken = state.timers[index] ? state.timers[index].seconds : 0;
+
+                return {
+                    question: q.question,
+                    correct_answer: q.correct_answer,
+                    user_answer: answer,
+                    time_taken: timeTaken,
+                    difficulty: q.difficulty
+                };
+            });
+
+            // Validate all questions are answered
+            const unanswered = submissions.filter(s => !s.user_answer.trim());
+            if (unanswered.length > 0) {
+                alert(`Please answer all questions. ${unanswered.length} question(s) remaining.`);
+                return;
+            }
+
+            // Show loading
+            const resultsSection = document.getElementById('section-results');
+            resultsSection.querySelector('.card').innerHTML = '<div class="spinner"></div><p style="text-align:center;">Evaluating your answers using AI...</p>';
+            goToStep(4);
+
+            try {
+                const response = await fetch(`${API_URL}/evaluate-answers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ submissions })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                displayResults(data);
+
+            } catch (error) {
+                resultsSection.querySelector('.card').innerHTML = `<div class="alert alert-error">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayResults(data) {
+            const { results, summary } = data;
+
+            // Summary
+            const summaryHTML = `
+                <div class="score-item">
+                    <div class="score-value">${summary.average_score}%</div>
+                    <div class="score-label">Average Score</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-value">${summary.total_questions}</div>
+                    <div class="score-label">Total Questions</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-value">${Math.floor(summary.total_time / 60)}:${(summary.total_time % 60).toString().padStart(2, '0')}</div>
+                    <div class="score-label">Total Time</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-value">${summary.performance_level}</div>
+                    <div class="score-label">Performance</div>
+                </div>
+            `;
+
+            document.getElementById('scoreSummary').innerHTML = summaryHTML;
+
+            // Detailed results
+            let detailedHTML = '<h3 style="margin-bottom: 20px;">Detailed Analysis</h3>';
+            
+            if (summary.plagiarism_detected || summary.ai_generated_detected) {
+                detailedHTML += '<div class="alert alert-error">';
+                if (summary.plagiarism_detected) detailedHTML += '⚠️ Plagiarism detected in some answers.<br>';
+                if (summary.ai_generated_detected) detailedHTML += '⚠️ AI-generated content detected in some answers.';
+                detailedHTML += '</div>';
+            }
+
+            results.forEach((r, index) => {
+                const isCorrect = r.correctness_score >= 70;
+                detailedHTML += `
+                    <div class="result-card ${isCorrect ? 'correct' : 'incorrect'}">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                            <strong>Question ${index + 1}</strong>
+                            <div>
+                                <span class="badge ${isCorrect ? 'badge-success' : 'badge-danger'}">
+                                    ${r.correctness_score}% Correct
+                                </span>
+                                <span class="badge badge-warning">⏱️ ${r.time_taken}s</span>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); margin-bottom: 10px;">${r.question}</p>
+                        <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <strong>Your Answer:</strong><br>
+                            <p style="margin-top: 5px;">${r.user_answer}</p>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <strong>Expected Answer:</strong><br>
+                            <p style="margin-top: 5px;">${r.correct_answer}</p>
+                        </div>
+                        <div style="padding: 10px; background: rgba(99, 102, 241, 0.1); border-radius: 8px;">
+                            <strong>💡 Feedback:</strong> ${r.feedback}
+                        </div>
+                        ${r.is_plagiarized ? '<div class="badge badge-danger">Plagiarized</div>' : ''}
+                        ${r.is_ai_generated ? '<div class="badge badge-warning">AI-Generated</div>' : ''}
+                    </div>
+                `;
+            });
+
+            document.getElementById('detailedResults').innerHTML = detailedHTML;
+
+            // Restore result section structure
+            const resultsSection = document.getElementById('section-results');
+            resultsSection.querySelector('.card').innerHTML = `
+                <h2 style="margin-bottom: 20px;">📊 Your Results</h2>
+                <div class="score-summary" id="scoreSummary">${summaryHTML}</div>
+                <div id="detailedResults
