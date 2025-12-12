@@ -379,4 +379,4 @@ python app.py
 
 ---
 
-**Built with ❤️ using Flask, Claude AI, and modern web technologies**
+**Built with ❤️ using Flask**
