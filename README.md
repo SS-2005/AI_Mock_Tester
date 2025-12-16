@@ -1,4 +1,4 @@
-# 🎓 QuizMaster - AI-Powered Assessment System
+# 🎓 QuizMaster - AI-Powered Assessment System (On-Going)
 
 A comprehensive web application that extracts content from documents (PDF/TXT/DOCX), generates intelligent questions using AI, and evaluates user answers with advanced metrics including plagiarism detection and AI-content detection.
 
